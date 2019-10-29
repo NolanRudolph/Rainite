@@ -63,6 +63,6 @@ io.on("connection", function (socket) {
 });
 
 // Display game on localhost port 8081
-server.listen(8081, function () {
+server.listen(6969, function () {
 	console.log(`Listening on ${server.address().port}`);
 });

@@ -115,6 +115,7 @@ function update()
         // Make sure keystrokes wrt player
         if (this.player)
         {
+                // Do NOT mess with this, took half an hour to find a good system
                 if(this.cursors.left.isDown)
                 {
                         this.player.setVelocityX(-150);
@@ -150,6 +151,7 @@ function update()
                                                 y !== this.player.oldPosition.y))
                 {
                         // Socket emission to server to handle new movement from player
+                        // (See create()'s this.socket.on("playerMoved") for full explanation)
                         this.socket.emit("playerMovement", {x: this.player.x, y: this.player.y});
                 }
 
@@ -170,7 +172,6 @@ function addPlayer(self, playerInfo)
                                                            .setOrigin(0.5, 0.5);
 
         self.player.setDrag(100);
-        self.player.setAngularDrag(100);
         self.player.setMaxVelocity(200);
 }
 
