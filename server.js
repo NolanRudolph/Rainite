@@ -60,7 +60,7 @@ io.on("connection", function (socket) {
 	});
 });
 
-// Display game on localhost port 8081
+// Display game on localhost port 6969 for maximum throughput (haha)
 server.listen(6969, function () {
 	console.log(`Listening on ${server.address().port}`);
 });
