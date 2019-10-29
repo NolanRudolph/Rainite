@@ -22,8 +22,6 @@ io.on("connection", function (socket) {
 	console.log("User Connected");
 	// Create a new player and add to the players object
 	players[socket.id] = {
-		// Store rotation of player (adjust me later)
-		rotation: 0,
 		// Store x and y positions of our new player (randomized temporarily)
 		x: Math.floor(Math.random() * 800),
 		y: Math.floor(Math.random() * 800),
