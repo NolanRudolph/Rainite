@@ -24,9 +24,9 @@ io.on("connection", function (socket) {
 	players[socket.id] = {
 		// Store rotation of player (adjust me later)
 		rotation: 0,
-		// Store x and y positions of our new player
-		x: Math.floor(Math.random() * 700) + 50,
-		y: Math.floor(Math.random() * 500) + 50,
+		// Store x and y positions of our new player (randomized temporarily)
+		x: Math.floor(Math.random() * 800),
+		y: Math.floor(Math.random() * 800),
 		// Add a unique player ID
 		playerId: socket.id,
 	};
@@ -38,7 +38,7 @@ io.on("connection", function (socket) {
 	// Update all other players of the new player
 	// socket.broadcast.emit: Emit an event to all other sockets 
 	// 							  (i.e. all other existing users)
-	socket.broadcast.emit('newPlayer', players[socket.id]);
+	socket.broadcast.emit("newPlayer", players[socket.id]);
 
 	// Add functionality for user disconnecting
 	socket.on("disconnect", function() {
@@ -48,7 +48,17 @@ io.on("connection", function (socket) {
 		delete players[socket.id];
 
 		// Emit a message to all other players to remove this player
-		io.emit('disconnect', socket.id);
+		io.emit("disconnect", socket.id);
+	});
+
+	// Add functionality for receiving player movement from clients
+	socket.on("playerMovement", function(movementData) {
+		// Update user position that voiced the change
+		players[socket.id].x = movementData.x;
+		players[socket.id].y = movementData.y;
+
+		// Notify all clients of this occurrence
+		socket.broadcast.emit("playerMoved", players[socket.id]);
 	});
 });
 
