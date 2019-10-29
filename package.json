@@ -1,0 +1,25 @@
+{
+  "name": "Rainite",
+  "version": "1.0.0",
+  "description": "<p align=\"center\"> \t<b>Rainite ~ A 2D Multiplayer Game made with the Phaser Game Engine</b> </p>",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NolanRudolph/Rainite.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NolanRudolph/Rainite/issues"
+  },
+  "homepage": "https://github.com/NolanRudolph/Rainite#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}
