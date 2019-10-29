@@ -1,5 +1,5 @@
 <p align="center">
-	<b>**Rainite ~ A 2D Multiplayer Game made with the Phaser Game Engine**</b>
+	<b>Rainite ~ A 2D Multiplayer Game made with the Phaser Game Engine</b>
 </p>
 
 <p>  
