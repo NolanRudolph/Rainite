@@ -34,18 +34,24 @@ var game = new Phaser.Game(config);
 function preload() 
 {
         // Load in red block for temporary testing
-        this.load.image('red',    'assets/red.png');
-        this.load.image('orange', 'assets/orange.png');
-        this.load.image('yellow', 'assets/yellow.png');
-        this.load.image('green',  'assets/green.png');
-        this.load.image('blue',   'assets/blue.png');
-        this.load.image('purple', 'assets/purple.png');
+        this.load.image('red',    'assets/Testing/red.png');
+        this.load.image('orange', 'assets/Testing/orange.png');
+        this.load.image('yellow', 'assets/Testing/yellow.png');
+        this.load.image('green',  'assets/Testing/green.png');
+        this.load.image('blue',   'assets/Testing/blue.png');
+        this.load.image('purple', 'assets/Testing/purple.png');
 
+	this.load.atlas("knight", "assets/Animations/knight.png", "assets/Animations/knight.json");
 }
  
 // Displays the images we"ve loaded in preload()
 function create() 
 {        
+
+	/* CAMERA STUFF */
+
+
+	/* SOCKET STUFF */
         // Weird errors occur if we don't use self for addPlayer()
         var self = this;
 
@@ -55,18 +61,18 @@ function create()
         // Define group for holding players
         this.otherPlayers = this.physics.add.group();
 
+	/* Test that worked
+	this.test = this.add.sprite(200, 200, "knight");
+	this.test.setScale(3);
+	this.test.play("walk");
+	*/
+
         // Listen for socket emission with "currentPlayers" key
         this.socket.on("currentPlayers", function(players) {
                 Object.keys(players).forEach(function(id) {
                         // If the new player is this client
-                        if(players[id].playerId === self.socket.id) {
-                                // Add the player to the scene, called with player object
-                                addPlayer(self, players[id]);
-                        }
-                        // Otherwise, it's another player that should be added
-                        else 
-                        {
-                                addOtherPlayers(self, players[id]);
+                        if(players[id].playerId != self.socket.id) {
+                                otherPlayers = addOtherPlayers(self, players[id]);
                         }
                 });
         });
@@ -104,75 +110,80 @@ function create()
                 })
         })
 
+	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
+	this.myPlayer.setScale(3);
+	this.myPlayer.setDrag(100);
+	this.myPlayer.setMaxVelocity(500);
+
+	/* ANIMATION STUFF */
+	this.anims.create({
+		key: "walk",
+		frames: this.anims.generateFrameNames("knight", {start: 0, end: 3, zeroPad: 0, prefix: "knight_f_run_anim_f", suffix: ".png"}),
+		frameRate: 8,
+		repeat: -1
+	});
+
+	this.myPlayer.play("walk");
+
         // Take user input to manipulate their character
         this.cursors = this.input.keyboard.createCursorKeys();
 }
  
 // Constantly updates the status of our objects/sprites
-function update() 
+function update(time, delta)
 {
         /* PERSONAL PLAYER SECTION */
         // Make sure keystrokes wrt player
-        if (this.player)
+        if (this.myPlayer)
         {
                 // Do NOT mess with this, took half an hour to find a good system
                 if(this.cursors.left.isDown)
                 {
-                        this.player.setVelocityX(-150);
+                        this.myPlayer.setVelocityX(-150);
                 }
                 if (this.cursors.right.isDown)
                 {
-                        this.player.setVelocityX(150);
+                        this.myPlayer.setVelocityX(150);
                 }
                 if (this.cursors.up.isDown)
                 {
-                        this.player.setVelocityY(-150);
+                        this.myPlayer.setVelocityY(-150);
                 }
                 if (this.cursors.down.isDown)
                 {
-                        this.player.setVelocityY(150);
+                        this.myPlayer.setVelocityY(150);
                 }
                 if (!this.cursors.left.isDown && !this.cursors.right.isDown)
                 {
-                        this.player.setVelocityX(0);
+                        this.myPlayer.setVelocityX(0);
                 }
 
                 if (!this.cursors.up.isDown && !this.cursors.down.isDown)
                 {
-                        this.player.setVelocityY(0);
+                        this.myPlayer.setVelocityY(0);
                 }
+		// Capture player's position
+		var x = this.myPlayer.x;
+		var y = this.myPlayer.y;
 
-                // Capture player's position
-                var x = this.player.x;
-                var y = this.player.y;
+		// If the player has moved from previous spot, update all other clients
+		if (this.myPlayer.oldPosition && (x !== this.myPlayer.oldPosition.x ||
+						y !== this.myPlayer.oldPosition.y))
+		{
+			// Socket emission to server to handle new movement from player
+			// (See create()'s this.socket.on("playerMoved") for full explanation)
+			this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y});
+		}
 
-                // If the player has moved from previous spot, update all other clients
-                if (this.player.oldPosition && (x !== this.player.oldPosition.x ||
-                                                y !== this.player.oldPosition.y))
-                {
-                        // Socket emission to server to handle new movement from player
-                        // (See create()'s this.socket.on("playerMoved") for full explanation)
-                        this.socket.emit("playerMovement", {x: this.player.x, y: this.player.y});
-                }
-
-                // Save the player's previous state
-                this.player.oldPosition = 
-                {
-                        x: this.player.x,
-                        y: this.player.y
-                }
-        }
+		// Save the player's previous state
+		this.myPlayer.oldPosition = 
+		{
+			x: this.myPlayer.x,
+			y: this.myPlayer.y
+		}
+	}
 
         //this.physics.world.wrap(this.player, 5);
-}
-
-function addPlayer(self, playerInfo)
-{
-        self.player = self.physics.add.image(playerInfo.x, playerInfo.y, 'blue')
-                                                           .setOrigin(0.5, 0.5);
-
-        self.player.setDrag(100);
-        self.player.setMaxVelocity(200);
 }
 
 function addOtherPlayers(self, playerInfo)
@@ -185,4 +196,6 @@ function addOtherPlayers(self, playerInfo)
 
         // Add the new player to the list of new players
         self.otherPlayers.add(otherPlayer);
+
+	return self.otherPlayers;
 }
