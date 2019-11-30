@@ -29,8 +29,6 @@ var config = {
  
 // Begins bringing Phaser to life o.O
 var game = new Phaser.Game(config);
-var moved = 0;
-var left = 0;
 
 // Preload: Responsible for loading in new sprites
 function preload() 
@@ -63,12 +61,6 @@ function create()
         // Define group for holding players
         this.otherPlayers = this.physics.add.group();
 
-	/* Test that worked
-	this.test = this.add.sprite(200, 200, "knight");
-	this.test.setScale(3);
-	this.test.play("walk");
-	*/
-
         // Listen for socket emission with "currentPlayers" key
         this.socket.on("currentPlayers", function(players) {
                 Object.keys(players).forEach(function(id) {
@@ -100,7 +92,7 @@ function create()
         // 1. Client informs server a player moved
         // 2. Server receives information and broadcasts to all clients
         // 3. This function receives the server request for all clients
-        this.socket.on("playerMoved", function(playerInfo) {
+        this.socket.on("playerMoved", function(playerInfo, leftD, typeD, statD) {
                 // Go through the list of players and...
                 self.otherPlayers.getChildren().forEach(function (otherPlayer) {
                         // If the player who moved is equal to the current assesed ID...
@@ -108,11 +100,38 @@ function create()
                         {
                                 // Move that player from the perspective of the current client
                                 otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+
+				// Player changed direction (they should now look right)
+				if (leftD && playerInfo.left)
+				{
+					otherPlayer.flipX = true;
+				}
+				// Player changed faced direction (they should now look left)
+				else if (leftD)
+				{
+					otherPlayer.flipX = false;
+				}
+				// Player changed character type (e.g. knight to ranger)
+				if (typeD != -1)
+				{
+					// Change character
+				}
+				// Player changes state (e.g. idle to walk)
+				if (statD != -1)
+				{
+					otherPlayer.play(statD);
+				}
+					
                         }
                 })
         })
 
+	/* PLAYER STUFF */
 	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
+	this.myPlayer.type = "knight";
+	this.myPlayer.left = 0;
+	this.myPlayer.moved = 0;
+	this.myPlayer.state = "idle";
 	this.myPlayer.setScale(3);
 	this.myPlayer.setDrag(100);
 	this.myPlayer.setMaxVelocity(500);
@@ -148,18 +167,18 @@ function update(time, delta)
                 // Do NOT mess with this, took half an hour to find a good system
                 if(this.cursors.left.isDown)
                 {
-			if (!left)
+			if (!this.myPlayer.left)
 			{
-				left = 1;
+				this.myPlayer.left = 1;
 				this.myPlayer.flipX = true;
 			}
                         this.myPlayer.setVelocityX(-150);
                 }
                 if (this.cursors.right.isDown)
                 {
-			if (left)
+			if (this.myPlayer.left)
 			{
-				left = 0;
+				this.myPlayer.left = 0;
 				this.myPlayer.flipX = false;
 			}
                         this.myPlayer.setVelocityX(150);
@@ -189,21 +208,26 @@ function update(time, delta)
 		if (this.myPlayer.oldPosition && (x !== this.myPlayer.oldPosition.x ||
 						y !== this.myPlayer.oldPosition.y))
 		{
-			if (moved)
+			if (this.myPlayer.moved)
 			{
+				this.myPlayer.state = "walk";
 				this.myPlayer.play("walk");
-				moved = 0;
+				this.myPlayer.moved = 0;
 			}
 			// Socket emission to server to handle new movement from player
 			// (See create()'s this.socket.on("playerMoved") for full explanation)
-			this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y});
+			this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, type: this.myPlayer.type, 
+							    left: this.myPlayer.left, state: this.myPlayer.state});
 		}
 		else
 		{
-			if (!moved)
+			if (!this.myPlayer.moved)
 			{
+				this.myPlayer.state = "idle";
 				this.myPlayer.play("idle");
-				moved = 1
+				this.myPlayer.moved = 1
+				this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, type: this.myPlayer.type,
+								    left: this.myPlayer.left, state: this.myPlayer.state});
 			}
 		}
 
@@ -220,11 +244,13 @@ function update(time, delta)
 
 function addOtherPlayers(self, playerInfo)
 {
-        const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, 'red')
-                                                                  .setOrigin(0.5, 0.5);
-
-        // Give the player a comparable ID
-        otherPlayer.playerId = playerInfo.playerId;
+	const otherPlayer = self.physics.add.sprite(playerInfo.x, playerInfo.y, playerInfo.type, playerInfo.type.concat("_f_idle_anim_f0.png"));
+       	otherPlayer.setScale(3);
+	otherPlayer.play(playerInfo.state);
+	otherPlayer.type = playerInfo.type;
+	otherPlayer.left = playerInfo.left;
+	otherPlayer.state = playerInfo.state;
+	otherPlayer.playerId = playerInfo.playerId;
 
         // Add the new player to the list of new players
         self.otherPlayers.add(otherPlayer);

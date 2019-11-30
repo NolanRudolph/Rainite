@@ -23,10 +23,13 @@ io.on("connection", function (socket) {
 	// Create a new player and add to the players object
 	players[socket.id] = {
 		// Store x and y positions of our new player (randomized temporarily)
-		x: Math.floor(Math.random() * 800),
-		y: Math.floor(Math.random() * 800),
+		x: Math.floor(200),
+		y: Math.floor(200),
 		// Add a unique player ID
 		playerId: socket.id,
+		type: "knight",
+		left: 0,
+		state: "idle"
 	};
 
 	// Send the players object to the new player
@@ -52,11 +55,16 @@ io.on("connection", function (socket) {
 	// Add functionality for receiving player movement from clients
 	socket.on("playerMovement", function(movementData) {
 		// Update user position that voiced the change
-		players[socket.id].x = movementData.x;
-		players[socket.id].y = movementData.y;
-
-		// Notify all clients of this occurrence
-		socket.broadcast.emit("playerMoved", players[socket.id]);
+		console.log("X: ", movementData.x, " // Y: ", movementData.y, " // Type: ", movementData.type, " // Left: ",  movementData.left, " // State: ", movementData.state);
+		var leftD = players[socket.id].left  == movementData.left  ? 0  : 1;
+		var typeD = players[socket.id].type  == movementData.type  ? -1 : movementData.type;
+		var statD = players[socket.id].state == movementData.state ? -1 : movementData.state;
+		players[socket.id].x     = movementData.x;
+		players[socket.id].y     = movementData.y;
+		players[socket.id].left  = movementData.left;
+		players[socket.id].type  = movementData.type;
+		players[socket.id].state = movementData.state;
+		socket.broadcast.emit("playerMoved", players[socket.id], leftD, typeD, statD);
 	});
 });
 
