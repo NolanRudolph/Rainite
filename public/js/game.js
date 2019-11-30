@@ -130,7 +130,14 @@ function create()
 					
                         }
                 })
-        })
+        });
+
+	// Implement me
+	this.socket.on("playerAttacked", function(weaponData)
+		{
+			
+		}
+	);
 
 	/* PLAYER STUFF */
 	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
@@ -144,6 +151,7 @@ function create()
 
 	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
 	this.playerHand.isLeft = false;
+	this.playerHand.type = "sword";
 	this.playerHand.setScale(1.5);
 
 	/* ANIMATION STUFF */
@@ -287,15 +295,25 @@ function update(time, delta)
 			y: this.myPlayer.y
 		}
 	}
-	if (this.playerHand && this.pointer.isDown)
+	if (this.playerHand)
 	{
-		if (this.playerHand.isLeft)
+		if (!this.playerHand.anims.isPlaying && !this.playerHand.isPaused)
 		{
-			this.playerHand.play("slash");
+			this.playerHand.setVisible(false);
 		}
-		else
+		if (this.pointer.isDown)
 		{
-			this.playerHand.play("rslash");
+			this.playerHand.setVisible(true);
+			if (this.playerHand.isLeft)
+			{
+				this.playerHand.play("slash");
+				this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, type: this.playerHand.type,
+								  left: this.playerHand.isLeft});
+			}
+			else
+			{
+				this.playerHand.play("rslash");
+			}
 		}
 	}
 

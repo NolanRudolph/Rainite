@@ -10,6 +10,7 @@ var server = require("http").Server(app);
 var io = require("socket.io").listen(server);
 
 var players = {};
+var weapons = {};
 
 app.use(express.static(__dirname + "/public"));
 
@@ -32,6 +33,14 @@ io.on("connection", function (socket) {
 		state: "idle"
 	};
 
+	weapons[socket.id] = {
+		x: Math.floor(200),
+		y: Math.floor(200),
+		playerId: socket.id,
+		type: "sword",
+		left: 0
+	};
+
 	// Send the players object to the new player
 	// socket.emit: Emit an event to the client side socket (public/js/game.js)
 	socket.emit("currentPlayers", players);
@@ -42,30 +51,41 @@ io.on("connection", function (socket) {
 	socket.broadcast.emit("newPlayer", players[socket.id]);
 
 	// Add functionality for user disconnecting
-	socket.on("disconnect", function() {
-		console.log("A User Disconnected");
+	socket.on("disconnect", function() 
+		{
+			console.log("A User Disconnected");
 
-		// Remove player from the players object
-		delete players[socket.id];
+			// Remove player from the players object
+			delete players[socket.id];
 
-		// Emit a message to all other players to remove this player
-		io.emit("disconnect", socket.id);
-	});
+			// Emit a message to all other players to remove this player
+			io.emit("disconnect", socket.id);
+		}
+	);
 
 	// Add functionality for receiving player movement from clients
-	socket.on("playerMovement", function(movementData) {
-		// Update user position that voiced the change
-		console.log("X: ", movementData.x, " // Y: ", movementData.y, " // Type: ", movementData.type, " // Left: ",  movementData.left, " // State: ", movementData.state);
-		var leftD = players[socket.id].left  == movementData.left  ? 0  : 1;
-		var typeD = players[socket.id].type  == movementData.type  ? -1 : movementData.type;
-		var statD = players[socket.id].state == movementData.state ? -1 : movementData.state;
-		players[socket.id].x     = movementData.x;
-		players[socket.id].y     = movementData.y;
-		players[socket.id].left  = movementData.left;
-		players[socket.id].type  = movementData.type;
-		players[socket.id].state = movementData.state;
-		socket.broadcast.emit("playerMoved", players[socket.id], leftD, typeD, statD);
-	});
+	socket.on("playerMovement", function(movementData) 
+		{
+			// Update user position that voiced the change
+			console.log("MOVEMENT: X: ", movementData.x, " // Y: ", movementData.y, " // Type: ", movementData.type, " // Left: ",  movementData.left, " // State: ", movementData.state);
+			var leftD = players[socket.id].left  == movementData.left  ? 0  : 1;
+			var typeD = players[socket.id].type  == movementData.type  ? -1 : movementData.type;
+			var statD = players[socket.id].state == movementData.state ? -1 : movementData.state;
+			players[socket.id].x     = movementData.x;
+			players[socket.id].y     = movementData.y;
+			players[socket.id].left  = movementData.left;
+			players[socket.id].type  = movementData.type;
+			players[socket.id].state = movementData.state;
+			socket.broadcast.emit("playerMoved", players[socket.id], leftD, typeD, statD);
+		}
+	);
+
+	socket.on("playerAttack", function(weaponData)
+		{
+			console.log("WEAPON: X: ", weaponData.x, " // Y: ", weaponData.y, " // Type: ", weaponData.type);
+			socket.broadcast.emit("playerAttacked", weapons[socket.id]);
+		}
+	);
 });
 
 // Display game on localhost port 6969 for maximum throughput (haha)
