@@ -55,7 +55,7 @@ io.on("connection", function (socket) {
 	// Add functionality for receiving player movement from clients
 	socket.on("playerMovement", function(movementData) {
 		// Update user position that voiced the change
-		// console.log("X: ", movementData.x, " // Y: ", movementData.y, " // Type: ", movementData.type, " // Left: ",  movementData.left, " // State: ", movementData.state);
+		console.log("X: ", movementData.x, " // Y: ", movementData.y, " // Type: ", movementData.type, " // Left: ",  movementData.left, " // State: ", movementData.state);
 		var leftD = players[socket.id].left  == movementData.left  ? 0  : 1;
 		var typeD = players[socket.id].type  == movementData.type  ? -1 : movementData.type;
 		var statD = players[socket.id].state == movementData.state ? -1 : movementData.state;

@@ -1,2 +1,9 @@
 https://0x72.itch.io/dungeontileset-ii
 https://runninblood.itch.io/rpg-pack
+
+Split Slides:
+0 - 6: Cross Slash
+7 - 12: Down Slash
+13 - 18: Round Slash
+19 - 24: Big Forward Slash (Best)
+25 - 32: Huge Round Attack

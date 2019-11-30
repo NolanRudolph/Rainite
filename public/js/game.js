@@ -41,7 +41,11 @@ function preload()
         this.load.image('blue',   'assets/Testing/blue.png');
         this.load.image('purple', 'assets/Testing/purple.png');
 
+	this.load.image("blank", "assets/Animations/blank.png");
+
 	this.load.atlas("knight", "assets/Animations/knight.png", "assets/Animations/knight.json");
+	this.load.atlas("slash", "assets/Animations/slash.png", "assets/Animations/slash.json");
+	this.load.atlas("rslash", "assets/Animations/rslash.png", "assets/Animations/rslash.json");
 }
  
 // Displays the images we"ve loaded in preload()
@@ -138,6 +142,10 @@ function create()
 	this.myPlayer.setDrag(100);
 	this.myPlayer.setMaxVelocity(750);
 
+	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
+	this.playerHand.isLeft = false;
+	this.playerHand.setScale(1.5);
+
 	/* ANIMATION STUFF */
 	this.anims.create({
 		key: "walk",
@@ -152,6 +160,21 @@ function create()
 		frameRate: 8,
 		repeat: -1
 	});
+	
+	this.anims.create({
+		key: "slash",
+		frames: this.anims.generateFrameNames("slash", {start: 0, end: 6, zeroPad: 0, prefix: "best_slash_f", suffix: ".png"}),
+		framerate: 8,
+		repeat: 0
+	});
+
+	this.anims.create({
+		key:"rslash",
+		frames: this.anims.generateFrameNames("rslash", {start: 0, end: 6, zeropad: 0, prefix: "best_slash_r_f", suffix:".png"}),
+		framerate: 8,
+		repeat: 0
+	});
+
 
 	this.myPlayer.play("idle");
 
@@ -163,6 +186,7 @@ function create()
 
         // Take user input to manipulate their character
         this.cursors = this.input.keyboard.createCursorKeys();
+	this.pointer = this.input.activePointer;
 }
  
 // Constantly updates the status of our objects/sprites
@@ -208,9 +232,26 @@ function update(time, delta)
                 {
                         this.myPlayer.setVelocityY(0);
                 }
+		
+		if (this.myPlayer.left)
+		{
+			this.playerHand.isLeft = true;
+			this.playerHand.x = this.myPlayer.x - 20;
+			this.playerHand.y = this.myPlayer.y + 15;
+		}
+		else
+		{
+			this.playerHand.isLeft = false;
+			this.playerHand.x = this.myPlayer.x + 20;
+			this.playerHand.y = this.myPlayer.y + 15;
+		}
+
+
+
 		// Capture player's position
 		var x = this.myPlayer.x;
 		var y = this.myPlayer.y;
+
 
 		// If the player has moved from previous spot, update all other clients
 		if (this.myPlayer.oldPosition && (x !== this.myPlayer.oldPosition.x ||
@@ -244,6 +285,17 @@ function update(time, delta)
 		{
 			x: this.myPlayer.x,
 			y: this.myPlayer.y
+		}
+	}
+	if (this.playerHand && this.pointer.isDown)
+	{
+		if (this.playerHand.isLeft)
+		{
+			this.playerHand.play("slash");
+		}
+		else
+		{
+			this.playerHand.play("rslash");
 		}
 	}
 
