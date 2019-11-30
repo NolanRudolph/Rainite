@@ -29,6 +29,7 @@ var config = {
  
 // Begins bringing Phaser to life o.O
 var game = new Phaser.Game(config);
+var moved = 0;
  
 // Preload: Responsible for loading in new sprites
 function preload() 
@@ -46,7 +47,7 @@ function preload()
  
 // Displays the images we"ve loaded in preload()
 function create() 
-{        
+{       
 
 	/* CAMERA STUFF */
 
@@ -123,7 +124,14 @@ function create()
 		repeat: -1
 	});
 
-	this.myPlayer.play("walk");
+	this.anims.create({
+		key: "idle",
+		frames: this.anims.generateFrameNames("knight", {start:0, end:3, zeroPad: 0, prefix: "knight_f_idle_anim_f", suffix: ".png"}),
+		frameRate: 8,
+		repeat: -1
+	});
+
+	this.myPlayer.play("idle");
 
         // Take user input to manipulate their character
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -170,9 +178,22 @@ function update(time, delta)
 		if (this.myPlayer.oldPosition && (x !== this.myPlayer.oldPosition.x ||
 						y !== this.myPlayer.oldPosition.y))
 		{
+			if (moved)
+			{
+				this.myPlayer.play("walk");
+				moved = 0;
+			}
 			// Socket emission to server to handle new movement from player
 			// (See create()'s this.socket.on("playerMoved") for full explanation)
 			this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y});
+		}
+		else
+		{
+			if (!moved)
+			{
+				this.myPlayer.play("idle");
+				moved = 1
+			}
 		}
 
 		// Save the player's previous state
