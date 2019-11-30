@@ -46,10 +46,12 @@ function preload()
  
 // Displays the images we"ve loaded in preload()
 function create() 
-{       
-
-	/* CAMERA STUFF */
-
+{      
+	let bg = this.add.image(0, 0, "assets/Testing/falcon.png").setOrigin(0, 0);
+	bg.displayHeight = this.sys.game.config.height;
+	bg.scaleX = bg.scaleY;
+	bg.x = game.config.width/2;
+	bg.y = game.config.height/2;
 
 	/* SOCKET STUFF */
         // Weird errors occur if we don't use self for addPlayer()
@@ -134,7 +136,7 @@ function create()
 	this.myPlayer.state = "idle";
 	this.myPlayer.setScale(3);
 	this.myPlayer.setDrag(100);
-	this.myPlayer.setMaxVelocity(500);
+	this.myPlayer.setMaxVelocity(750);
 
 	/* ANIMATION STUFF */
 	this.anims.create({
@@ -152,6 +154,12 @@ function create()
 	});
 
 	this.myPlayer.play("idle");
+
+	/* CAMERA STUFF */
+	this.camera = this.cameras.main;
+	this.camera.roundPixels = false;
+	this.camera.startFollow(this.myPlayer);
+
 
         // Take user input to manipulate their character
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -172,7 +180,7 @@ function update(time, delta)
 				this.myPlayer.left = 1;
 				this.myPlayer.flipX = true;
 			}
-                        this.myPlayer.setVelocityX(-150);
+                        this.myPlayer.setVelocityX(-200);
                 }
                 if (this.cursors.right.isDown)
                 {
@@ -181,15 +189,15 @@ function update(time, delta)
 				this.myPlayer.left = 0;
 				this.myPlayer.flipX = false;
 			}
-                        this.myPlayer.setVelocityX(150);
+                        this.myPlayer.setVelocityX(200);
                 }
                 if (this.cursors.up.isDown)
                 {
-                        this.myPlayer.setVelocityY(-150);
+                        this.myPlayer.setVelocityY(-200);
                 }
                 if (this.cursors.down.isDown)
                 {
-                        this.myPlayer.setVelocityY(150);
+                        this.myPlayer.setVelocityY(200);
                 }
                 if (!this.cursors.left.isDown && !this.cursors.right.isDown)
                 {
