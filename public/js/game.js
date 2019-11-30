@@ -30,7 +30,8 @@ var config = {
 // Begins bringing Phaser to life o.O
 var game = new Phaser.Game(config);
 var moved = 0;
- 
+var left = 0;
+
 // Preload: Responsible for loading in new sprites
 function preload() 
 {
@@ -147,10 +148,20 @@ function update(time, delta)
                 // Do NOT mess with this, took half an hour to find a good system
                 if(this.cursors.left.isDown)
                 {
+			if (!left)
+			{
+				left = 1;
+				this.myPlayer.flipX = true;
+			}
                         this.myPlayer.setVelocityX(-150);
                 }
                 if (this.cursors.right.isDown)
                 {
+			if (left)
+			{
+				left = 0;
+				this.myPlayer.flipX = false;
+			}
                         this.myPlayer.setVelocityX(150);
                 }
                 if (this.cursors.up.isDown)
