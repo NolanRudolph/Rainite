@@ -33,14 +33,8 @@ var game = new Phaser.Game(config);
 // Preload: Responsible for loading in new sprites
 function preload() 
 {
-        // Load in red block for temporary testing
-        this.load.image('red',    'assets/Testing/red.png');
-        this.load.image('orange', 'assets/Testing/orange.png');
-        this.load.image('yellow', 'assets/Testing/yellow.png');
-        this.load.image('green',  'assets/Testing/green.png');
-        this.load.image('blue',   'assets/Testing/blue.png');
-        this.load.image('purple', 'assets/Testing/purple.png');
-
+	this.load.image("f_heart", "assets/Framework/sprite_heart.png");
+	this.load.image("e_heart", "assets/Framework/sprite_heart_empty.png");
 	this.load.image("blank", "assets/Animations/blank.png");
 
 	this.load.atlas("knight", "assets/Animations/knight.png", "assets/Animations/knight.json");
@@ -52,8 +46,9 @@ function preload()
 function create() 
 {
 	/* PLAYER STUFF */
+	
+	// Main Player == myPlayer
 	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
-	//this.myPlayer.setOrigin(this.myPlayer.displayWidth / 2, this.myPlayer.displayHeight / 2);
 	this.myPlayer.classType = "knight";
 	this.myPlayer.left = 0;
 	this.myPlayer.moved = 0;
@@ -62,14 +57,30 @@ function create()
 	this.myPlayer.setScale(3);
 	this.myPlayer.setDrag(100);
 	this.myPlayer.setMaxVelocity(750);
-	
+	this.myPlayer.health = 100;
+	this.myPlayer.lastHeart = 9;
 	myPlayer = this.myPlayer;
 
+	// Weapon == playerHand
 	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
 	this.playerHand.isLeft = false;
 	this.playerHand.weaponType = "sword";
 	this.playerHand.setScale(1.5);
 	this.playerHand.cooldown = 20;
+
+	// Heart Containers
+	this.heart0 = this.add.sprite(25, 25, "f_heart").setScrollFactor(0);
+	this.heart1 = this.add.sprite(60, 25, "f_heart").setScrollFactor(0);
+	this.heart2 = this.add.sprite(95, 25, "f_heart").setScrollFactor(0);
+	this.heart3 = this.add.sprite(130, 25, "f_heart").setScrollFactor(0);
+	this.heart4 = this.add.sprite(165, 25, "f_heart").setScrollFactor(0);
+	this.heart5 = this.add.sprite(200, 25, "f_heart").setScrollFactor(0);
+	this.heart6 = this.add.sprite(235, 25, "f_heart").setScrollFactor(0);
+	this.heart7 = this.add.sprite(270, 25, "f_heart").setScrollFactor(0);
+	this.heart8 = this.add.sprite(305, 25, "f_heart").setScrollFactor(0);
+	this.heart9 = this.add.sprite(340, 25, "f_heart").setScrollFactor(0);
+	hearts = [this.heart0, this.heart1, this.heart2, this.heart3, this.heart4, 
+		  this.heart5, this.heart6, this.heart7, this.heart8, this.heart9]
 
 
 	/* BACKGROUND STUFF */
@@ -188,6 +199,17 @@ function create()
 					// Implement health mechanics
 					this.myPlayer.state = "hit";	
 					this.myPlayer.play("hit");
+					this.myPlayer.health -= 20;
+
+					console.log("My health is ", this.myPlayer.health);
+					console.log("Setting between ", Math.floor(this.myPlayer.health % 10), " and 10");
+					var low = Math.floor(this.myPlayer.health / 10) >= 0 ? Math.floor(this.myPlayer.health / 10) : 0;
+					this.myPlayer.lastHeart = low;
+					for (i = low; i < 10; ++i)
+					{
+						hearts[i].setTexture("e_heart");
+					}
+
 
 					// Knockback mechanics
 					if (myPlayer.x < playX)
@@ -383,6 +405,17 @@ function update(time, delta)
 		{
 			x: this.myPlayer.x,
 			y: this.myPlayer.y
+		}
+
+		/* HEALTH */
+		if (this.myPlayer.health < 100)
+		{
+			if (Math.floor(this.myPlayer.health / 10) > this.myPlayer.lastHeart)
+			{
+				hearts[this.myPlayer.lastHeart].setTexture("f_heart");
+				++this.myPlayer.lastHeart;
+			}
+			this.myPlayer.health += 0.1;
 		}
 	}
 
