@@ -8,8 +8,8 @@ var config = {
         parent: "phaser-example",
 
         // Resolution to play in, not size of map
-        width: 800,
-        height: 800,
+        width: 1024,
+        height: 1024,
         
         // Physics MUST be added, for future objects
         physics: {
@@ -45,12 +45,13 @@ function preload()
 	// Special Floors (e.g. cracked floors)
 	this.load.image("floor1", "assets/Scenary/floor_2.png");
 	this.load.image("floor2", "assets/Scenary/floor_3.png");
-	this.load.iamge("floor3", "assets/Scenary/floor_4.png");
-	this.load.iamge("floor4", "assets/Scenary/floor_5.png");
-	this.load.iamge("floor5", "assets/Scenary/floor_6.png");
-	this.load.iamge("floor6", "assets/Scenary/floor_7.png");
-	this.load.iamge("floor7", "assets/Scenary/floor_8.png");
+	this.load.image("floor3", "assets/Scenary/floor_4.png");
+	this.load.image("floor4", "assets/Scenary/floor_5.png");
+	this.load.image("floor5", "assets/Scenary/floor_6.png");
+	this.load.image("floor6", "assets/Scenary/floor_7.png");
+	this.load.image("floor7", "assets/Scenary/floor_8.png");
 	
+
 	// Top left and right corners
 	this.load.image("wall_in_top_left", "assets/Scenary/wall_side_top_left.png");
 	this.load.image("wall_in_top_right", "assets/Scenary/wall_side_top_right.png");
@@ -60,14 +61,14 @@ function preload()
 	this.load.image("wall_in_mid_top", "assets/Scenary/wall_top_mid.png");
 	
 	// Inner left and right
-	this.load.image("wall_in_left", "assets/Scenary/wall_inner_corner_mid_left.png");
-	this.load.image("wall_in_right", "assets/Scenary/wall_inner_corner_mid_right.png");
+	this.load.image("wall_in_left", "assets/Scenary/wall_corner_left.png");
+	this.load.image("wall_in_right", "assets/Scenary/wall_corner_right.png");
 	this.load.image("wall_in_left_top", "assets/Scenary/wall_inner_corner_top_left.png");
 	this.load.image("wall_in_right_top", "assets/Scenary/wall_inner_corner_top_right.png");
 	
 	// Outer left and right
-	this.load.image("wall_out_left", "assets/Scenary/wall_left.png");
-	this.load.image("wall_out_right", "assets/Scenary/wall_right.png");
+	this.load.image("wall_out_left", "assets/Scenary/wall_corner_front_left.png");
+	this.load.image("wall_out_right", "assets/Scenary/wall_corner_front_right.png");
 	this.load.image("wall_out_left_top", "assets/Scenary/wall_top_left.png");
 	this.load.image("wall_out_right_top", "assets/Scenary/wall_top_right.png");
 	
@@ -85,6 +86,77 @@ function preload()
 // Displays the images we"ve loaded in preload()
 function create() 
 {
+	/* ROOM STUFF */
+	floors = ["floor1", "floor2", "floor3", "floor4", "floor5", "floor6", "floor7"]
+	var roomX = game.config.width;
+	var roomY = game.config.height;
+
+	// FLOORS
+	for (i = 64; i < roomX; i += 64)
+	{
+		for (j = 128; j < roomY - 64; j += 64)
+		{
+			let randomNum = Math.random();
+			if (randomNum < 0.1)
+			{
+				let randomNum2 = Math.floor(Math.random() * 7);
+				this.add.sprite(i, j, floors[randomNum2]).setScale(4);
+			}
+			else
+			{
+				this.add.sprite(i, j, "floor").setScale(4);	
+			}
+			
+		}
+	}
+
+	// WALLS
+	for (i = 64; i < roomX; i += 64)
+	{
+		if (i == 64)
+		{
+			this.physics.add.sprite(i, 0, "wall_in_left_top").setScale(4);
+			this.physics.add.sprite(i, 64, "wall_in_left").setScale(4);
+			
+			// Bottom Left
+			this.physics.add.sprite(i, 1024 - 64, "wall_out_left").setScale(4);
+			this.physics.add.sprite(i, 1024 - 128, "wall_out_left_top").setScale(4);
+
+			// Left Wall
+			for (j = 64; j < roomY - 64; j += 64)
+			{
+				this.physics.add.sprite(i, j, "wall_right").setScale(4);
+			}
+
+		}
+		// Right
+		else if (i == roomX - 64)
+		{
+			// Right Wall
+			for (j = 64; j < roomY; j += 64)
+			{
+				this.physics.add.sprite(i, j, "wall_left").setScale(4);
+			}
+
+			// Top Right 
+			this.physics.add.sprite(i, 64, "wall_in_right").setScale(4);
+			this.physics.add.sprite(i, 0, "wall_in_right_top").setScale(4);
+
+			// Bottom Right
+			this.physics.add.sprite(i, 1024 - 128, "wall_out_right_top").setScale(4);
+			this.physics.add.sprite(i, 1024 - 64, "wall_out_right").setScale(4);
+		}
+		else
+		{
+			// Inner Middle
+			this.physics.add.sprite(i, 0, "wall_in_mid_top").setScale(4);
+			this.physics.add.sprite(i, 64, "wall_mid").setScale(4);
+
+			// Outer Middle
+			this.physics.add.sprite(i, 1024 - 128, "wall_in_mid_top").setScale(4);
+			this.physics.add.sprite(i, 1024 - 64, "wall_mid").setScale(4);
+		}	
+	}
 	/* PLAYER STUFF */
 	
 	// Main Player == myPlayer
@@ -121,11 +193,6 @@ function create()
 	this.heart9 = this.add.sprite(340, 25, "f_heart").setScrollFactor(0);
 	hearts = [this.heart0, this.heart1, this.heart2, this.heart3, this.heart4, 
 		  this.heart5, this.heart6, this.heart7, this.heart8, this.heart9]
-
-
-	/* ROOM STUFF */
-	var roomX = game.config.width;
-	var roomY = game.config.height;
 
 
 	/* SOCKET STUFF */
