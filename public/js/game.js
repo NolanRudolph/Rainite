@@ -410,12 +410,12 @@ function update(time, delta)
 		/* HEALTH */
 		if (this.myPlayer.health < 100)
 		{
+			this.myPlayer.health += 0.1;
 			if (Math.floor(this.myPlayer.health / 10) > this.myPlayer.lastHeart)
 			{
 				hearts[this.myPlayer.lastHeart].setTexture("f_heart");
 				++this.myPlayer.lastHeart;
 			}
-			this.myPlayer.health += 0.1;
 		}
 	}
 
