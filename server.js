@@ -96,9 +96,9 @@ io.on("connection", function (socket) {
 	});
 
 	// Update other's clients for a weapon attack
-	socket.on("playerAttack", function(weaponData)
+	socket.on("playerAttack", function(attackData)
 	{
-		console.log("WEAPON: X: ", weaponData.x, " // Y: ", weaponData.y, " // Type: ", weaponData.weaponType);
+		console.log("WEAPON: X: ", attackData.x, " // Y: ", attackData.y, " playX: ", attackData.playX, " // playY: ", attackData.playY);
 		socket.broadcast.emit("playerAttacked", weapons[socket.id]);
 	});
 

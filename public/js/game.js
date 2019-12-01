@@ -51,6 +51,26 @@ function preload()
 // Displays the images we"ve loaded in preload()
 function create() 
 {
+	/* PLAYER STUFF */
+	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
+	//this.myPlayer.setOrigin(this.myPlayer.displayWidth / 2, this.myPlayer.displayHeight / 2);
+	this.myPlayer.classType = "knight";
+	this.myPlayer.left = 0;
+	this.myPlayer.moved = 0;
+	this.myPlayer.attacked = 1;
+	this.myPlayer.state = "idle";
+	this.myPlayer.setScale(3);
+	this.myPlayer.setDrag(100);
+	this.myPlayer.setMaxVelocity(750);
+	
+	myPlayer = this.myPlayer;
+
+	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
+	this.playerHand.isLeft = false;
+	this.playerHand.weaponType = "sword";
+	this.playerHand.setScale(1.5);
+
+
 	/* BACKGROUND STUFF */
 	let bg = this.add.image(0, 0, "assets/Testing/falcon.png").setOrigin(0, 0);
 	bg.displayHeight = this.sys.game.config.height;
@@ -96,7 +116,6 @@ function create()
         // 3. This function receives the server request for all clients
         this.socket.on("playerMoved", function(playerInfo, weaponInfo, leftD, typeD, statD) 
 	{
-		console.log("Received movement from ", playerInfo.playerId, " where weapon is at (", weaponInfo.x, ", ", weaponInfo.y, ")");
 		// Update opposing player's data
 		self.otherPlayers.getChildren().forEach(function (otherPlayer) 
 		{
@@ -139,10 +158,9 @@ function create()
 		})
 	});
 
-	// Implement me
+	// Let all other clients know a player attacked
 	this.socket.on("playerAttacked", function(weaponData)
 	{
-		console.log("Player ", weaponData.playerId, " attacked at position (", weaponData.x, ", ", weaponData.y, ")!");
 		self.otherWeapons.getChildren().forEach(function (otherWeapon)
 		{
 			if (weaponData.playerId === otherWeapon.playerId)
@@ -156,10 +174,30 @@ function create()
 				{
 					otherWeapon.play("rslash");
 				}
+				
+				// Did this client get hit?
+				var playY = weaponData.y - 22;
+				if (weaponData.isLeft)
+					var playX = weaponData.x + 18;
+				else
+					var playX = weaponData.x - 18;
+
+				if (Math.abs(myPlayer.x - playX) < 70 && Math.abs(myPlayer.y - playY) < 30)
+				{
+					// Implement health mechanics
+					console.log("x offset: ", Math.abs(this.myPlayer.x - playX), " // y offset: ", Math.abs(this.myPlayer.y - playY));
+					console.log("I got hit!");
+				}
+				// Testing
+				else
+				{
+					console.log("x offset: ", Math.abs(this.myPlayer.x - playX), " // y offset: ", Math.abs(this.myPlayer.y - playY));
+				}
 			}
 		})
 	});
 
+	// Used for "erasing" opponent's weapons after an attack
 	this.socket.on("attackStopped", function(playerId)
 	{
 		console.log("Player ", playerId, " stopped attacking!");
@@ -192,22 +230,6 @@ function create()
 		});
         });
 
-
-	/* PLAYER STUFF */
-	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
-	this.myPlayer.classType = "knight";
-	this.myPlayer.left = 0;
-	this.myPlayer.moved = 0;
-	this.myPlayer.attacked = 1;
-	this.myPlayer.state = "idle";
-	this.myPlayer.setScale(3);
-	this.myPlayer.setDrag(100);
-	this.myPlayer.setMaxVelocity(750);
-
-	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
-	this.playerHand.isLeft = false;
-	this.playerHand.weaponType = "sword";
-	this.playerHand.setScale(1.5);
 
 	/* ANIMATION STUFF */
 	this.anims.create({
@@ -365,13 +387,16 @@ function update(time, delta)
 			if (this.playerHand.isLeft)
 			{
 				this.playerHand.play("slash");
+				this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, weaponType: this.playerHand.weaponType,
+								  left: this.playerHand.isLeft, playX: this.playerHand.x + 18, playY: this.playerHand.y - 22});
 			}
 			else
 			{
 				this.playerHand.play("rslash");
+				this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, weaponType: this.playerHand.weaponType,
+								  left: this.playerHand.isLeft, playX: this.playerHand.x - 18, playY: this.playerHand.y - 22});
 			}
-			this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, weaponType: this.playerHand.weaponType,
-							  left: this.playerHand.isLeft});
+
 		}
 	}
 
