@@ -112,7 +112,6 @@ function create()
 	}
 
 	// WALLS
-	
 	walls = this.physics.add.staticGroup();
 
 	for (i = 64; i < roomX; i += 64)
@@ -316,9 +315,15 @@ function create()
 					this.myPlayer.play("hit");
 					this.myPlayer.health -= 20;
 
+					if (this.myPlayer.health < 0)
+					{
+						gameOver(self);
+					}
+
 					console.log("My health is ", this.myPlayer.health);
 					console.log("Setting between ", Math.floor(this.myPlayer.health % 10), " and 10");
-					var low = Math.floor(this.myPlayer.health / 10) >= 0 ? Math.floor(this.myPlayer.health / 10) : 0;
+					var low = Math.floor(this.myPlayer.health / 10) > 0 ? Math.floor(this.myPlayer.health / 10) : 0;
+					
 					this.myPlayer.lastHeart = low;
 					for (i = low; i < 10; ++i)
 					{
@@ -422,6 +427,12 @@ function create()
 	this.camera.startFollow(this.myPlayer);
 
 
+	/* GAME OVER STUFF */
+	this.gameOverText = this.add.text(0, 0, "GAME OVER", {fontSize: "64px", fill: "#ff0000"});
+	this.gameOverText.setVisible(false);
+
+
+	/* EXTRA STUFF */
         // Take user input to manipulate their character
         this.cursors = this.input.keyboard.createCursorKeys();
 	this.pointer = this.input.activePointer;
@@ -602,4 +613,12 @@ function addOtherWeapons(self, weaponInfo)
 
 	console.log("Adding new player ", weaponInfo.playerId, " to weapons where type: ", weaponInfo.weaponType, " // isLeft: ", weaponInfo.isLeft);
 	self.otherWeapons.add(otherWeapon);
+}
+
+function gameOver(self)
+{
+	self.physics.pause();
+	self.myPlayer.setTint(0xff0000);
+	self.gameOverText.setPosition(self.myPlayer.x - 200, self.myPlayer.y - 100);
+	self.gameOverText.setVisible(true);
 }
