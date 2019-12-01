@@ -10,7 +10,8 @@ var config = {
         // Resolution to play in, not size of map
         width: 1024,
         height: 1024,
-        
+       	title: "Rainite",
+
         // Physics MUST be added, for future objects
         physics: {
                 default: "arcade",
@@ -111,21 +112,24 @@ function create()
 	}
 
 	// WALLS
+	
+	walls = this.physics.add.staticGroup();
+
 	for (i = 64; i < roomX; i += 64)
 	{
 		if (i == 64)
 		{
-			this.physics.add.sprite(i, 0, "wall_in_left_top").setScale(4);
-			this.physics.add.sprite(i, 64, "wall_in_left").setScale(4);
+			walls.create(i, 0, "wall_in_left_top").setScale(4);
+			walls.create(i, 64, "wall_in_left").setScale(4);
 			
 			// Bottom Left
-			this.physics.add.sprite(i, 1024 - 64, "wall_out_left").setScale(4);
-			this.physics.add.sprite(i, 1024 - 128, "wall_out_left_top").setScale(4);
+			walls.create(i, 1024 - 64, "wall_out_left").setScale(4);
+			walls.create(i, 1024 - 128, "wall_out_left_top").setScale(4);
 
 			// Left Wall
 			for (j = 64; j < roomY - 64; j += 64)
 			{
-				this.physics.add.sprite(i, j, "wall_right").setScale(4);
+				walls.create(i, j, "wall_right").setScale(4);
 			}
 
 		}
@@ -135,28 +139,30 @@ function create()
 			// Right Wall
 			for (j = 64; j < roomY; j += 64)
 			{
-				this.physics.add.sprite(i, j, "wall_left").setScale(4);
+				walls.create(i, j, "wall_left").setScale(4);
 			}
 
 			// Top Right 
-			this.physics.add.sprite(i, 64, "wall_in_right").setScale(4);
-			this.physics.add.sprite(i, 0, "wall_in_right_top").setScale(4);
+			walls.create(i, 64, "wall_in_right").setScale(4);
+			walls.create(i, 0, "wall_in_right_top").setScale(4);
 
 			// Bottom Right
-			this.physics.add.sprite(i, 1024 - 128, "wall_out_right_top").setScale(4);
-			this.physics.add.sprite(i, 1024 - 64, "wall_out_right").setScale(4);
+			walls.create(i, 1024 - 128, "wall_out_right_top").setScale(4);
+			walls.create(i, 1024 - 64, "wall_out_right").setScale(4);
 		}
 		else
 		{
 			// Inner Middle
-			this.physics.add.sprite(i, 0, "wall_in_mid_top").setScale(4);
-			this.physics.add.sprite(i, 64, "wall_mid").setScale(4);
+			walls.create(i, 0, "wall_in_mid_top").setScale(4);
+			walls.create(i, 64, "wall_mid").setScale(4);
 
 			// Outer Middle
-			this.physics.add.sprite(i, 1024 - 128, "wall_in_mid_top").setScale(4);
-			this.physics.add.sprite(i, 1024 - 64, "wall_mid").setScale(4);
+			walls.create(i, 1024 - 128, "wall_in_mid_top").setScale(4);
+			walls.create(i, 1024 - 64, "wall_mid").setScale(4);
 		}	
 	}
+
+
 	/* PLAYER STUFF */
 	
 	// Main Player == myPlayer
@@ -173,12 +179,17 @@ function create()
 	this.myPlayer.lastHeart = 9;
 	myPlayer = this.myPlayer;
 
+	// Player should not be able to pass through walls
+	this.physics.add.collider(this.myPlayer, walls);
+
 	// Weapon == playerHand
 	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
 	this.playerHand.isLeft = false;
 	this.playerHand.weaponType = "sword";
 	this.playerHand.setScale(1.5);
 	this.playerHand.cooldown = 20;
+
+	//var rect = new Phaser.Geom.Rectangle(this, 0, 0, 365, 50, 0xb3a7a6, 0.5);
 
 	// Heart Containers
 	this.heart0 = this.add.sprite(25, 25, "f_heart").setScrollFactor(0);
