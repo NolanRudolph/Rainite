@@ -107,6 +107,11 @@ io.on("connection", function (socket) {
 	{
 		socket.broadcast.emit("attackStopped", socket.id);
 	});
+
+	socket.on("playerDeath", function ()
+	{
+		socket.broadcast.emit("playerDied", socket.id);
+	});
 });
 
 // Display game on localhost port 6969 for maximum throughput (haha)

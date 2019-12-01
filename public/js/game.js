@@ -176,6 +176,7 @@ function create()
 	this.myPlayer.setMaxVelocity(750);
 	this.myPlayer.health = 100;
 	this.myPlayer.lastHeart = 9;
+	this.myPlayer.isDead = false;
 	myPlayer = this.myPlayer;
 
 	// Player should not be able to pass through walls
@@ -308,7 +309,7 @@ function create()
 				else
 					var playX = weaponData.x - 18;
 
-				if (Math.abs(myPlayer.x - playX) < 70 && Math.abs(myPlayer.y - playY) < 30)
+				if (Math.abs(myPlayer.x - playX) < 70 && Math.abs(myPlayer.y - playY) < 30 && !myPlayer.isDead)
 				{
 					// Implement health mechanics
 					this.myPlayer.state = "hit";	
@@ -317,6 +318,11 @@ function create()
 
 					if (this.myPlayer.health < 0)
 					{
+						this.myPlayer.isDead = true;
+						for (i = 0; i < 10; ++i)
+						{
+							hearts[i].setTexture("e_heart");
+						}
 						gameOver(self);
 					}
 
@@ -361,6 +367,21 @@ function create()
 			}
 		})
 	});
+
+        // Used for perma stopping other player's from attacking
+        this.socket.on("playerDied", function(playerId)
+        {
+		console.log("Hello!");
+                self.otherPlayers.getChildren().forEach(function (otherPlayer)
+                {
+                        if (playerId === otherPlayer.playerId)
+                        {
+				console.log("Hello?");
+				otherPlayer.setTint(0xff0000);
+                        }
+                })
+        });
+
 
         // Listen for socket emission with "disconnect" key
         this.socket.on("disconnect", function (playerId) {
@@ -431,6 +452,8 @@ function create()
 	this.gameOverText = this.add.text(0, 0, "GAME OVER", {fontSize: "64px", fill: "#ff0000"});
 	this.gameOverText.setVisible(false);
 
+	this.winOverText = this.add.text(0, 0, "WINNER!", {fontSize: "64px", fill: "#00ff00"});
+	this.winOverText.setVisible(false);
 
 	/* EXTRA STUFF */
         // Take user input to manipulate their character
@@ -534,7 +557,7 @@ function update(time, delta)
 		}
 
 		/* HEALTH */
-		if (this.myPlayer.health < 100)
+		if (this.myPlayer.health < 100 && !this.myPlayer.isDead)
 		{
 			this.myPlayer.health += 0.1;
 			if (Math.floor(this.myPlayer.health / 10) > this.myPlayer.lastHeart)
@@ -557,7 +580,7 @@ function update(time, delta)
 		}
 
 		/* ATTACKING + SERVER UPDATES */
-		if (this.pointer.isDown && this.playerHand.cooldown == 20)
+		if (this.pointer.isDown && this.playerHand.cooldown == 20 && !this.myPlayer.isDead)
 		{
 			this.myPlayer.attacked = 1;
 			this.playerHand.setVisible(true);
@@ -621,4 +644,5 @@ function gameOver(self)
 	self.myPlayer.setTint(0xff0000);
 	self.gameOverText.setPosition(self.myPlayer.x - 200, self.myPlayer.y - 100);
 	self.gameOverText.setVisible(true);
+	self.socket.emit("playerDeath");
 }
