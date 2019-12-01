@@ -11,6 +11,7 @@ var io = require("socket.io").listen(server);
 
 var players = {};
 var weapons = {};
+var playerSize = 0;
 
 app.use(express.static(__dirname + "/public"));
 
@@ -20,7 +21,10 @@ app.get("/", function (req, res) {
 
 // Listen for connections and disconnections
 io.on("connection", function (socket) {
-	console.log("User Connected");
+
+	playerSize++;
+	console.log("User Connected, Players: ", playerSize);
+
 	// Create a new player and add to the players object
 	players[socket.id] = {
 		// Store x and y positions of our new player (randomized temporarily)
@@ -53,8 +57,9 @@ io.on("connection", function (socket) {
 
 	// Add functionality for user disconnecting
 	socket.on("disconnect", function() 
-		{
-			console.log("A User Disconnected");
+	{
+			playerSize--;
+			console.log("A User Disconnected, Players: ", playerSize);
 
 			// Remove player from the players object
 			delete players[socket.id];
@@ -62,8 +67,7 @@ io.on("connection", function (socket) {
 
 			// Emit a message to all other players to remove this player
 			io.emit("disconnect", socket.id);
-		}
-	);
+	});
 
 	// Add functionality for receiving player movement from clients
 	socket.on("playerMovement", function(movementData) 
@@ -98,8 +102,7 @@ io.on("connection", function (socket) {
 	// Update other's clients for a weapon attack
 	socket.on("playerAttack", function(attackData)
 	{
-		console.log("WEAPON: X: ", attackData.x, " // Y: ", attackData.y, " playX: ", attackData.playX, " // playY: ", attackData.playY);
-		socket.broadcast.emit("playerAttacked", weapons[socket.id]);
+		socket.broadcast.emit("playerAttacked", weapons[socket.id], attackData.id);
 	});
 
 	// I don't know an easier way of stopping animations so that's what this is for
@@ -108,9 +111,11 @@ io.on("connection", function (socket) {
 		socket.broadcast.emit("attackStopped", socket.id);
 	});
 
-	socket.on("playerDeath", function ()
+	socket.on("playerDeath", function (killerId)
 	{
-		socket.broadcast.emit("playerDied", socket.id);
+		playerSize--;
+		console.log("Player Died. Players: ", playerSize);
+		socket.broadcast.emit("playerDied", socket.id, killerId, playerSize);
 	});
 });
 

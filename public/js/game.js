@@ -165,7 +165,7 @@ function create()
 	/* PLAYER STUFF */
 	
 	// Main Player == myPlayer
-	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
+	this.myPlayer = this.physics.add.sprite(Math.floor(Math.random() * 750 + 128), Math.floor(Math.random() * 750 + 128), "knight", "knight_f_run_anim_f0.png");
 	this.myPlayer.classType = "knight";
 	this.myPlayer.left = 0;
 	this.myPlayer.moved = 0;
@@ -176,14 +176,16 @@ function create()
 	this.myPlayer.setMaxVelocity(750);
 	this.myPlayer.health = 100;
 	this.myPlayer.lastHeart = 9;
+	this.myPlayer.id = Math.floor(Math.random() * 10000);
 	this.myPlayer.isDead = false;
+	this.myPlayer.kills = 0;
 	myPlayer = this.myPlayer;
 
 	// Player should not be able to pass through walls
 	this.physics.add.collider(this.myPlayer, walls);
 
 	// Weapon == playerHand
-	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
+	this.playerHand = this.physics.add.sprite(this.myPlayer.x, this.myPlayer.y, "slash", "best_slash_f5.png");
 	this.playerHand.isLeft = false;
 	this.playerHand.weaponType = "sword";
 	this.playerHand.setScale(1.5);
@@ -286,7 +288,7 @@ function create()
 	});
 
 	// Let all other clients know a player attacked
-	this.socket.on("playerAttacked", function(weaponData)
+	this.socket.on("playerAttacked", function(weaponData, attackerId)
 	{
 		self.otherWeapons.getChildren().forEach(function (otherWeapon)
 		{
@@ -323,7 +325,8 @@ function create()
 						{
 							hearts[i].setTexture("e_heart");
 						}
-						gameOver(self);
+						console.log("Sending gameover");
+						gameOver(self, attackerId);
 					}
 
 					console.log("My health is ", this.myPlayer.health);
@@ -369,17 +372,29 @@ function create()
 	});
 
         // Used for perma stopping other player's from attacking
-        this.socket.on("playerDied", function(playerId)
+        this.socket.on("playerDied", function(playerId, killerId, playersLeft)
         {
-		console.log("Hello!");
                 self.otherPlayers.getChildren().forEach(function (otherPlayer)
                 {
+			console.log(otherPlayer.playerId);
                         if (playerId === otherPlayer.playerId)
                         {
-				console.log("Hello?");
-				otherPlayer.setTint(0xff0000);
-                        }
-                })
+				otherPlayer.setVisible(false);
+				delete(otherPlayer);
+			}
+			if (myPlayer.id == killerId.id)
+			{
+				this.myPlayer.kills++;
+				if (playersLeft == 1)
+				{
+					isWinner(self);
+				}
+			}
+                });
+		self.otherPlayers.getChildren().forEach(function (otherPlayer)
+		{
+			console.log(otherPlayer.playerId);
+		});
         });
 
 
@@ -589,13 +604,13 @@ function update(time, delta)
 			{
 				this.playerHand.play("slash");
 				this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, weaponType: this.playerHand.weaponType,
-								  left: this.playerHand.isLeft, playX: this.playerHand.x + 18, playY: this.playerHand.y - 22});
+								  left: this.playerHand.isLeft, playX: this.playerHand.x + 18, playY: this.playerHand.y - 22, id: this.myPlayer.id});
 			}
 			else
 			{
 				this.playerHand.play("rslash");
 				this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, weaponType: this.playerHand.weaponType,
-								  left: this.playerHand.isLeft, playX: this.playerHand.x - 18, playY: this.playerHand.y - 22});
+								  left: this.playerHand.isLeft, playX: this.playerHand.x - 18, playY: this.playerHand.y - 22, id: this.myPlayer.id});
 			}
 
 
@@ -638,11 +653,19 @@ function addOtherWeapons(self, weaponInfo)
 	self.otherWeapons.add(otherWeapon);
 }
 
-function gameOver(self)
+function gameOver(self, killer)
 {
 	self.physics.pause();
 	self.myPlayer.setTint(0xff0000);
 	self.gameOverText.setPosition(self.myPlayer.x - 200, self.myPlayer.y - 100);
 	self.gameOverText.setVisible(true);
-	self.socket.emit("playerDeath");
+	self.socket.emit("playerDeath", {id: killer});
+}
+
+function isWinner(self)
+{
+	self.physics.pause();
+	self.myPlayer.setTint(0x00ff00);
+	self.winOverText.setPosition(self.myPlayer.x - 200, self.myPlayer.y - 100);
+	self.winOverText.setVisible(true);
 }
