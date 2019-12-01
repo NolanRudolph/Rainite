@@ -50,12 +50,14 @@ function preload()
  
 // Displays the images we"ve loaded in preload()
 function create() 
-{      
+{
+	/* BACKGROUND STUFF */
 	let bg = this.add.image(0, 0, "assets/Testing/falcon.png").setOrigin(0, 0);
 	bg.displayHeight = this.sys.game.config.height;
 	bg.scaleX = bg.scaleY;
 	bg.x = game.config.width/2;
 	bg.y = game.config.height/2;
+
 
 	/* SOCKET STUFF */
         // Weird errors occur if we don't use self for addPlayer()
@@ -64,48 +66,44 @@ function create()
         // Obtain a socket object for client
         this.socket = io();
 
-        // Define group for holding players
+        // Define group for holding players & weapons
         this.otherPlayers = this.physics.add.group();
+	this.otherWeapons = this.physics.add.group();
 
         // Listen for socket emission with "currentPlayers" key
-        this.socket.on("currentPlayers", function(players) {
-                Object.keys(players).forEach(function(id) {
+        this.socket.on("currentPlayers", function(players) 
+	{
+                Object.keys(players).forEach(function(id) 
+		{
                         // If the new player is this client
-                        if(players[id].playerId != self.socket.id) {
-                                otherPlayers = addOtherPlayers(self, players[id]);
+                        if(players[id].playerId != self.socket.id) 
+			{
+                                addOtherPlayers(self, players[id]);
+				addOtherWeapons(self, players[id]);
                         }
                 });
         });
 
         // Listen for socket emission with "newPlayer" key
-        this.socket.on("newPlayer", function(playerInfo) {
+        this.socket.on("newPlayer", function(playerInfo, weaponInfo) {
                 // Add the new player to the field
                 addOtherPlayers(self, playerInfo);
-        });
-
-        // Listen for socket emission with "disconnect" key
-        this.socket.on("disconnect", function (playerId) {
-                // .getChildren() gets all game objects for that group
-                self.otherPlayers.getChildren().forEach(function (otherPlayer) {
-                        // Remove that player from the game
-                        if (playerId === otherPlayer.playerId)
-                        {
-                                otherPlayer.destroy();
-                        }
-                });
+		addOtherWeapons(self, weaponInfo);
         });
 
         // 1. Client informs server a player moved
         // 2. Server receives information and broadcasts to all clients
         // 3. This function receives the server request for all clients
-        this.socket.on("playerMoved", function(playerInfo, leftD, typeD, statD) {
-                // Go through the list of players and...
-                self.otherPlayers.getChildren().forEach(function (otherPlayer) {
-                        // If the player who moved is equal to the current assesed ID...
-                        if (playerInfo.playerId === otherPlayer.playerId)
-                        {
-                                // Move that player from the perspective of the current client
-                                otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+        this.socket.on("playerMoved", function(playerInfo, weaponInfo, leftD, typeD, statD) 
+	{
+		console.log("Received movement from ", playerInfo.playerId, " where weapon is at (", weaponInfo.x, ", ", weaponInfo.y, ")");
+		// Update opposing player's data
+		self.otherPlayers.getChildren().forEach(function (otherPlayer) 
+		{
+			if (playerInfo.playerId === otherPlayer.playerId)
+			{
+				// Move that player from the perspective of the current client
+				otherPlayer.setPosition(playerInfo.x, playerInfo.y);
 
 				// Player changed direction (they should now look right)
 				if (leftD && playerInfo.left)
@@ -124,26 +122,83 @@ function create()
 				}
 				// Player changes state (e.g. idle to walk)
 				if (statD != -1)
-				{
+					{
 					otherPlayer.play(statD);
 				}
-					
-                        }
-                })
-        });
+			}
+		})
+		// Update weapon position
+		self.otherWeapons.getChildren().forEach(function (otherWeapon)
+		{
+			if (weaponInfo.playerId === otherWeapon.playerId)
+			{
+				// Move the position of that weapon
+				otherWeapon.setPosition(weaponInfo.x, weaponInfo.y);
+				otherWeapon.isLeft = weaponInfo.isLeft;
+			}
+		})
+	});
 
 	// Implement me
 	this.socket.on("playerAttacked", function(weaponData)
+	{
+		console.log("Player ", weaponData.playerId, " attacked at position (", weaponData.x, ", ", weaponData.y, ")!");
+		self.otherWeapons.getChildren().forEach(function (otherWeapon)
 		{
-			
-		}
-	);
+			if (weaponData.playerId === otherWeapon.playerId)
+			{
+				otherWeapon.setVisible(true);
+				if (otherWeapon.isLeft)
+				{
+					otherWeapon.play("slash");
+				}
+				else
+				{
+					otherWeapon.play("rslash");
+				}
+			}
+		})
+	});
+
+	this.socket.on("attackStopped", function(playerId)
+	{
+		console.log("Player ", playerId, " stopped attacking!");
+		self.otherWeapons.getChildren().forEach(function (otherWeapon)
+		{
+			if (playerId === otherWeapon.playerId)
+			{
+				otherWeapon.setVisible(false);
+			}
+		})
+	});
+
+        // Listen for socket emission with "disconnect" key
+        this.socket.on("disconnect", function (playerId) {
+                // Delete the other player's character
+		self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+                        // Remove that player from the game
+                        if (playerId === otherPlayer.playerId)
+                        {
+                                otherPlayer.destroy();
+                        }
+                });
+		// Delete the other player's weapon
+		self.otherWeapons.getChildren().forEach(function (otherWeapon)
+		{
+			if (playerId === otherWeapon.playerId)
+			{
+				otherWeapon.destroy();
+			}
+		});
+        });
+
 
 	/* PLAYER STUFF */
 	this.myPlayer = this.physics.add.sprite(200, 200, "knight", "knight_f_run_anim_f0.png");
-	this.myPlayer.type = "knight";
+	this.myPlayer.classType = "knight";
 	this.myPlayer.left = 0;
 	this.myPlayer.moved = 0;
+	this.myPlayer.attacked = 1;
 	this.myPlayer.state = "idle";
 	this.myPlayer.setScale(3);
 	this.myPlayer.setDrag(100);
@@ -151,7 +206,7 @@ function create()
 
 	this.playerHand = this.physics.add.sprite(200, 200, "slash", "best_slash_f5.png");
 	this.playerHand.isLeft = false;
-	this.playerHand.type = "sword";
+	this.playerHand.weaponType = "sword";
 	this.playerHand.setScale(1.5);
 
 	/* ANIMATION STUFF */
@@ -244,14 +299,14 @@ function update(time, delta)
 		if (this.myPlayer.left)
 		{
 			this.playerHand.isLeft = true;
-			this.playerHand.x = this.myPlayer.x - 20;
-			this.playerHand.y = this.myPlayer.y + 15;
+			this.playerHand.x = this.myPlayer.x - 18;
+			this.playerHand.y = this.myPlayer.y + 22;
 		}
 		else
 		{
 			this.playerHand.isLeft = false;
-			this.playerHand.x = this.myPlayer.x + 20;
-			this.playerHand.y = this.myPlayer.y + 15;
+			this.playerHand.x = this.myPlayer.x + 18;
+			this.playerHand.y = this.myPlayer.y + 22;
 		}
 
 
@@ -273,7 +328,7 @@ function update(time, delta)
 			}
 			// Socket emission to server to handle new movement from player
 			// (See create()'s this.socket.on("playerMoved") for full explanation)
-			this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, type: this.myPlayer.type, 
+			this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, classType: this.myPlayer.classType, 
 							    left: this.myPlayer.left, state: this.myPlayer.state});
 		}
 		else
@@ -283,7 +338,7 @@ function update(time, delta)
 				this.myPlayer.state = "idle";
 				this.myPlayer.play("idle");
 				this.myPlayer.moved = 1
-				this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, type: this.myPlayer.type,
+				this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, classType: this.myPlayer.classType,
 								    left: this.myPlayer.left, state: this.myPlayer.state});
 			}
 		}
@@ -297,23 +352,26 @@ function update(time, delta)
 	}
 	if (this.playerHand)
 	{
-		if (!this.playerHand.anims.isPlaying && !this.playerHand.isPaused)
+		if (!this.playerHand.anims.isPlaying && this.myPlayer.attacked)
 		{
 			this.playerHand.setVisible(false);
+			this.socket.emit("attackStop");
+			this.myPlayer.attacked = 0;
 		}
 		if (this.pointer.isDown)
 		{
+			this.myPlayer.attacked = 1;
 			this.playerHand.setVisible(true);
 			if (this.playerHand.isLeft)
 			{
 				this.playerHand.play("slash");
-				this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, type: this.playerHand.type,
-								  left: this.playerHand.isLeft});
 			}
 			else
 			{
 				this.playerHand.play("rslash");
 			}
+			this.socket.emit("playerAttack", {x: this.playerHand.x, y: this.playerHand.y, weaponType: this.playerHand.weaponType,
+							  left: this.playerHand.isLeft});
 		}
 	}
 
@@ -322,16 +380,27 @@ function update(time, delta)
 
 function addOtherPlayers(self, playerInfo)
 {
-	const otherPlayer = self.physics.add.sprite(playerInfo.x, playerInfo.y, playerInfo.type, playerInfo.type.concat("_f_idle_anim_f0.png"));
+	const otherPlayer = self.physics.add.sprite(playerInfo.x, playerInfo.y, playerInfo.classType, playerInfo.classType.concat("_f_idle_anim_f0.png"));
        	otherPlayer.setScale(3);
 	otherPlayer.play(playerInfo.state);
-	otherPlayer.type = playerInfo.type;
+	otherPlayer.classType = playerInfo.classType;
 	otherPlayer.left = playerInfo.left;
 	otherPlayer.state = playerInfo.state;
 	otherPlayer.playerId = playerInfo.playerId;
 
         // Add the new player to the list of new players
         self.otherPlayers.add(otherPlayer);
+}
 
-	return self.otherPlayers;
+function addOtherWeapons(self, weaponInfo)
+{
+	const otherWeapon = self.physics.add.sprite(weaponInfo.x, weaponInfo.y, "slash", "best_slash_f5.png");
+	otherWeapon.setScale(1.5);
+	otherWeapon.playerId = weaponInfo.playerId;
+	otherWeapon.isLeft = weaponInfo.isLeft;
+	otherWeapon.weaponType = weaponInfo.weaponType;
+	otherWeapon.setVisible(false);
+
+	console.log("Adding new player ", weaponInfo.playerId, " to weapons where type: ", weaponInfo.weaponType, " // isLeft: ", weaponInfo.isLeft);
+	self.otherWeapons.add(otherWeapon);
 }
