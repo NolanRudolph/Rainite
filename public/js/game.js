@@ -185,13 +185,18 @@ function create()
 				if (Math.abs(myPlayer.x - playX) < 70 && Math.abs(myPlayer.y - playY) < 30)
 				{
 					// Implement health mechanics
-					console.log("x offset: ", Math.abs(this.myPlayer.x - playX), " // y offset: ", Math.abs(this.myPlayer.y - playY));
-					console.log("I got hit!");
-				}
-				// Testing
-				else
-				{
-					console.log("x offset: ", Math.abs(this.myPlayer.x - playX), " // y offset: ", Math.abs(this.myPlayer.y - playY));
+					
+					this.myPlayer.play("hit");
+
+					// Knockback mechanics
+					if (myPlayer.x < playX)
+					{
+						this.myPlayer.setVelocityX(-500)
+					}
+					else
+					{
+						this.myPlayer.setVelocityX(500)
+					}
 				}
 			}
 		})
@@ -260,6 +265,12 @@ function create()
 		repeat: 0
 	});
 
+	this.anims.create({
+		key: "hit",
+		frames: this.anims.generateFrameNames("knight", {start: 0, end: 6, zeropad: 0, prefix: "knight_f_hit_anim_f", suffix: ".png"}),
+		framerate: 2,
+		repeat: 0
+	});
 
 	this.myPlayer.play("idle");
 
@@ -337,12 +348,11 @@ function update(time, delta)
 		var x = this.myPlayer.x;
 		var y = this.myPlayer.y;
 
-
 		// If the player has moved from previous spot, update all other clients
 		if (this.myPlayer.oldPosition && (x !== this.myPlayer.oldPosition.x ||
 						y !== this.myPlayer.oldPosition.y))
 		{
-			if (this.myPlayer.moved)
+			if (this.myPlayer.moved && this.myPlayer.anims.currentAnim.key != "hit")
 			{
 				this.myPlayer.state = "walk";
 				this.myPlayer.play("walk");
@@ -355,7 +365,7 @@ function update(time, delta)
 		}
 		else
 		{
-			if (!this.myPlayer.moved)
+			if (!this.myPlayer.moved || this.myPlayer.anims.isPlaying == false)
 			{
 				this.myPlayer.state = "idle";
 				this.myPlayer.play("idle");
