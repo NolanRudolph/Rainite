@@ -33,10 +33,38 @@ var game = new Phaser.Game(config);
 // Preload: Responsible for loading in new sprites
 function preload() 
 {
+	/* HEART CONTAINERS */
 	this.load.image("f_heart", "assets/Framework/sprite_heart.png");
 	this.load.image("e_heart", "assets/Framework/sprite_heart_empty.png");
-	this.load.image("blank", "assets/Animations/blank.png");
 
+
+	/* ROOM SCENARY */
+	// Top left and right corners
+	this.load.image("wall_in_top_left", "assets/Scenary/wall_side_top_left.png");
+	this.load.image("wall_in_top_right", "assets/Scenary/wall_side_top_right.png");
+	
+	// Middle for both inner and outer
+	this.load.image("wall_mid", "assets/Scenary/wall_mid.png");
+	this.load.image("wall_in_mid_top", "assets/Scenary/wall_top_mid.png");
+	
+	// Inner left and right
+	this.load.image("wall_in_left", "assets/Scenary/wall_inner_corner_mid_left.png");
+	this.load.image("wall_in_right", "assets/Scenary/wall_inner_corner_mid_right.png");
+	this.load.image("wall_in_left_top", "assets/Scenary/wall_inner_corner_top_left.png");
+	this.load.image("wall_in_right_top", "assets/Scenary/wall_inner_corner_top_right.png");
+	
+	// Outer left and right
+	this.load.image("wall_out_left", "assets/Scenary/wall_left.png");
+	this.load.image("wall_out_right", "assets/Scenary/wall_right.png");
+	this.load.image("wall_out_left_top", "assets/Scenary/wall_top_left.png");
+	this.load.image("wall_out_right_top", "assets/Scenary/wall_top_right.png");
+	
+	// Left and right
+	this.load.image("wall_left", "assets/Scenary/wall_side_mid_left.png");
+	this.load.image("wall_right", "assets/Scenary/wall_side_mid_right.png");
+
+
+	/* ANIMATIONS */
 	this.load.atlas("knight", "assets/Animations/knight.png", "assets/Animations/knight.json");
 	this.load.atlas("slash", "assets/Animations/slash.png", "assets/Animations/slash.json");
 	this.load.atlas("rslash", "assets/Animations/rslash.png", "assets/Animations/rslash.json");
@@ -83,12 +111,9 @@ function create()
 		  this.heart5, this.heart6, this.heart7, this.heart8, this.heart9]
 
 
-	/* BACKGROUND STUFF */
-	let bg = this.add.image(0, 0, "assets/Testing/falcon.png").setOrigin(0, 0);
-	bg.displayHeight = this.sys.game.config.height;
-	bg.scaleX = bg.scaleY;
-	bg.x = game.config.width/2;
-	bg.y = game.config.height/2;
+	/* ROOM STUFF */
+	var roomX = game.config.width;
+	var roomY = game.config.height;
 
 
 	/* SOCKET STUFF */
