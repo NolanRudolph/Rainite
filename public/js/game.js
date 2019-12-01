@@ -69,6 +69,7 @@ function create()
 	this.playerHand.isLeft = false;
 	this.playerHand.weaponType = "sword";
 	this.playerHand.setScale(1.5);
+	this.playerHand.cooldown = 20;
 
 
 	/* BACKGROUND STUFF */
@@ -141,7 +142,7 @@ function create()
 				}
 				// Player changes state (e.g. idle to walk)
 				if (statD != -1)
-					{
+				{
 					otherPlayer.play(statD);
 				}
 			}
@@ -185,7 +186,7 @@ function create()
 				if (Math.abs(myPlayer.x - playX) < 70 && Math.abs(myPlayer.y - playY) < 30)
 				{
 					// Implement health mechanics
-					
+					this.myPlayer.state = "hit";	
 					this.myPlayer.play("hit");
 
 					// Knockback mechanics
@@ -197,6 +198,11 @@ function create()
 					{
 						this.myPlayer.setVelocityX(500)
 					}
+					if (this.socket)
+					{
+						this.socket.emit("playerMovement", {x: this.myPlayer.x, y: this.myPlayer.y, classType: this.myPlayer.classType,
+										    left: this.myPlayer.left, state: this.myPlayer.state});
+					}
 				}
 			}
 		})
@@ -205,7 +211,6 @@ function create()
 	// Used for "erasing" opponent's weapons after an attack
 	this.socket.on("attackStopped", function(playerId)
 	{
-		console.log("Player ", playerId, " stopped attacking!");
 		self.otherWeapons.getChildren().forEach(function (otherWeapon)
 		{
 			if (playerId === otherWeapon.playerId)
@@ -292,7 +297,7 @@ function update(time, delta)
         // Make sure keystrokes wrt player
         if (this.myPlayer)
         {
-                // Do NOT mess with this, took half an hour to find a good system
+		/* MOVEMENT */
                 if(this.cursors.left.isDown)
                 {
 			if (!this.myPlayer.left)
@@ -342,9 +347,7 @@ function update(time, delta)
 			this.playerHand.y = this.myPlayer.y + 22;
 		}
 
-
-
-		// Capture player's position
+		/* SERVER UPDATING (POSITIONAL) */
 		var x = this.myPlayer.x;
 		var y = this.myPlayer.y;
 
@@ -382,18 +385,24 @@ function update(time, delta)
 			y: this.myPlayer.y
 		}
 	}
+
+	/* WEAPON SECTION */
 	if (this.playerHand)
 	{
+		/* SERVER UPDATES */
 		if (!this.playerHand.anims.isPlaying && this.myPlayer.attacked)
 		{
 			this.playerHand.setVisible(false);
 			this.socket.emit("attackStop");
 			this.myPlayer.attacked = 0;
 		}
-		if (this.pointer.isDown)
+
+		/* ATTACKING + SERVER UPDATES */
+		if (this.pointer.isDown && this.playerHand.cooldown == 20)
 		{
 			this.myPlayer.attacked = 1;
 			this.playerHand.setVisible(true);
+			this.playerHand.cooldown = 0;
 			if (this.playerHand.isLeft)
 			{
 				this.playerHand.play("slash");
@@ -407,6 +416,13 @@ function update(time, delta)
 								  left: this.playerHand.isLeft, playX: this.playerHand.x - 18, playY: this.playerHand.y - 22});
 			}
 
+
+		}
+
+		/* COOLDOWN */
+		if (this.playerHand.cooldown < 20)
+		{
+			++this.playerHand.cooldown;
 		}
 	}
 
