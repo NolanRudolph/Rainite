@@ -39,6 +39,18 @@ function preload()
 
 
 	/* ROOM SCENARY */
+	// Standard Floor
+	this.load.image("floor", "assets/Scenary/floor_1.png");
+
+	// Special Floors (e.g. cracked floors)
+	this.load.image("floor1", "assets/Scenary/floor_2.png");
+	this.load.image("floor2", "assets/Scenary/floor_3.png");
+	this.load.iamge("floor3", "assets/Scenary/floor_4.png");
+	this.load.iamge("floor4", "assets/Scenary/floor_5.png");
+	this.load.iamge("floor5", "assets/Scenary/floor_6.png");
+	this.load.iamge("floor6", "assets/Scenary/floor_7.png");
+	this.load.iamge("floor7", "assets/Scenary/floor_8.png");
+	
 	// Top left and right corners
 	this.load.image("wall_in_top_left", "assets/Scenary/wall_side_top_left.png");
 	this.load.image("wall_in_top_right", "assets/Scenary/wall_side_top_right.png");
