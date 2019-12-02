@@ -120,6 +120,6 @@ io.on("connection", function (socket) {
 });
 
 // Display game on localhost port 6969 for maximum throughput (haha)
-server.listen(6969, function () {
+server.listen(13337, function () {
 	console.log(`Listening on ${server.address().port}`);
 });
