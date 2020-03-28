@@ -3,6 +3,6 @@
 </p>
 
 <p>  
-	Collect materials, build armor and weapons, and conquer all other opponents!<br>
-	Please click the "Deployment" tab to see the online game! Invite your friends and fight against one another :D
+	Collect materials, build armor and weapons, and conquer all other opponents!<br><br>
+	Please click the "Environment" tab up above to see the online game! Invite your friends and fight against one another :D
 </p>
